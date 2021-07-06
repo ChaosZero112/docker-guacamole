@@ -1,5 +1,3 @@
-**:warning: This project is now archived and no longer supported. Please contact me if you maintain a replacement and would like me to link to your repo.**
-
 # Docker Guacamole
 
 A Docker Container for [Apache Guacamole](https://guacamole.apache.org/), a client-less remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH over HTML5.
@@ -9,6 +7,8 @@ This image will run on most platforms that support Docker including Docker for M
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/esgaHNRxdhY/0.jpg)](http://www.youtube.com/watch?v=esgaHNRxdhY "Video Title")
 
 This container runs the guacamole web client, the guacd server and a postgres database.
+
+Forked from [oznu/docker-guacamole](https://github.com/oznu/docker-guacamole).
 
 ## Usage
 
