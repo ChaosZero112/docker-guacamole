@@ -11,7 +11,8 @@ ENV ARCH=amd64 \
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    curl wget tar unzip lsb-release gnupg libcairo2-dev libjpeg62-turbo-dev libpng-dev \
+    curl wget tar unzip lsb-release gnupg libcairo2-dev \
+    autotools-dev libjpeg62-turbo-dev libpng-dev \
     libossp-uuid-dev libavcodec-dev libavutil-dev \
     libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
     libssh2-1-dev libtelnet-dev libvncserver-dev \
@@ -44,6 +45,7 @@ RUN [ "$ARCH" = "amd64" ] && ln -s /usr/local/lib/freerdp /usr/lib/x86_64-linux-
 RUN curl -SLO "https://github.com/apache/guacamole-server/archive/refs/heads/master.zip" \
   && unzip master.zip \
   && cd guacamole-server-master \
+  && autoreconf -fi \
   && ./configure --enable-allow-freerdp-snapshots \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make install \
