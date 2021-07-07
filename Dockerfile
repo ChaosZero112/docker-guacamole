@@ -3,7 +3,7 @@ FROM library/tomcat:10-jdk11-openjdk-slim
 ENV ARCH=amd64 \
   GUAC_VER=1.3.0 \
   GUACAMOLE_HOME=/app/guacamole \
-  PG_MAJOR=12 \
+  PG_MAJOR=13 \
   PG_JDBC=42.2.22 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
@@ -11,12 +11,17 @@ ENV ARCH=amd64 \
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    curl unzip libcairo2-dev libjpeg62-turbo-dev libpng-dev \
+    curl wget tar unzip lsb_release libcairo2-dev libjpeg62-turbo-dev libpng-dev \
     libossp-uuid-dev libavcodec-dev libavutil-dev \
     libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
     libssh2-1-dev libtelnet-dev libvncserver-dev \
     libpulse-dev libssl-dev libvorbis-dev libwebp-dev libwebsockets-dev \
-    ghostscript postgresql-${PG_MAJOR} \
+    ghostscript \
+    && RELEASE=$(lsb_release -cs) \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - \
+    && apt-get update \
+    && apt-get install -y postgresql-${PG_MAJOR} \
   && rm -rf /var/lib/apt/lists/*
   
 # Apply the s6-overlay
