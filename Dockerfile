@@ -11,7 +11,7 @@ ENV ARCH=amd64 \
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    curl wget tar unzip lsb_release libcairo2-dev libjpeg62-turbo-dev libpng-dev \
+    curl wget tar unzip lsb-release libcairo2-dev libjpeg62-turbo-dev libpng-dev \
     libossp-uuid-dev libavcodec-dev libavutil-dev \
     libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
     libssh2-1-dev libtelnet-dev libvncserver-dev \
