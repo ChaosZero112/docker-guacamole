@@ -3,7 +3,7 @@ FROM library/tomcat:10-jdk11-openjdk-slim
 ENV ARCH=amd64 \
   GUAC_VER=1.3.0 \
   GUACAMOLE_HOME=/app/guacamole \
-  PG_MAJOR=13 \
+  PG_MAJOR=12 \
   PG_JDBC=42.2.22 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
