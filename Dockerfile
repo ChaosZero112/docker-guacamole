@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
   
 # Apply the s6-overlay
 RUN apt-get install -y curl
-RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/latest/s6-overlay-${ARCH}.tar.gz" \
+RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-${ARCH}.tar.gz" \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
   && rm -rf s6-overlay-${ARCH}.tar.gz \
