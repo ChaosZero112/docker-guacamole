@@ -9,8 +9,18 @@ ENV ARCH=amd64 \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
 
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl unzip libcairo2-dev libjpeg62-turbo-dev libpng-dev \
+    libossp-uuid-dev libavcodec-dev libavutil-dev \
+    libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
+    libssh2-1-dev libtelnet-dev libvncserver-dev \
+    libpulse-dev libssl-dev libvorbis-dev libwebp-dev libwebsockets-dev \
+    ghostscript postgresql-${PG_MAJOR} \
+  && rm -rf /var/lib/apt/lists/*
+  
 # Apply the s6-overlay
-
+RUN apt-get install -y curl
 RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/latest/s6-overlay-${ARCH}.tar.gz" \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
@@ -20,16 +30,6 @@ RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/l
     ${GUACAMOLE_HOME}/extensions
 
 WORKDIR ${GUACAMOLE_HOME}
-
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    libcairo2-dev libjpeg62-turbo-dev libpng-dev \
-    libossp-uuid-dev libavcodec-dev libavutil-dev \
-    libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
-    libssh2-1-dev libtelnet-dev libvncserver-dev \
-    libpulse-dev libssl-dev libvorbis-dev libwebp-dev libwebsockets-dev \
-    ghostscript postgresql-${PG_MAJOR} \
-  && rm -rf /var/lib/apt/lists/*
 
 # Link FreeRDP to where guac expects it to be
 RUN [ "$ARCH" = "armhf" ] && ln -s /usr/local/lib/freerdp /usr/lib/arm-linux-gnueabihf/freerdp || exit 0
