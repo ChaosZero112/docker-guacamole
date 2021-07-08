@@ -45,7 +45,10 @@ RUN [ "$ARCH" = "amd64" ] && ln -s /usr/local/lib/freerdp /usr/lib/x86_64-linux-
 RUN curl -SLO "https://github.com/apache/guacamole-server/archive/refs/heads/master.zip" \
   && unzip master.zip \
   && cd guacamole-server-master \
-  && autotools-dev \
+  && libtoolize \
+  && aclocal \
+  && automake --force-missing --add-missing \
+  && autoconf \
   && ./configure --enable-allow-freerdp-snapshots \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make install \
