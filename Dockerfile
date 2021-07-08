@@ -45,7 +45,8 @@ RUN [ "$ARCH" = "amd64" ] && ln -s /usr/local/lib/freerdp /usr/lib/x86_64-linux-
 RUN curl -SLO "https://github.com/apache/guacamole-server/archive/refs/heads/master.zip" \
   && unzip master.zip \
   && cd guacamole-server-master \
-  && libtoolize \
+  && libtoolize --force \
+  && autoheader \
   && aclocal \
   && automake --force-missing --add-missing \
   && autoconf \
