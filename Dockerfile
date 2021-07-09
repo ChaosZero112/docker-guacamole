@@ -5,14 +5,16 @@ ENV ARCH=amd64 \
   GUACAMOLE_HOME=/app/guacamole \
   PG_MAJOR=13 \
   PG_JDBC=42.2.22 \
+  LIBJPEG=2.1.0 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN curl -SL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG}/libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb -o libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb \
+  && apt-get update && apt-get install -y ./libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb \
     curl wget tar unzip lsb-release gnupg libcairo2-dev \
-    autotools-dev dh-autoreconf libjpeg62-turbo-dev libpng-dev \
+    autotools-dev dh-autoreconf libpng-dev \
     libossp-uuid-dev libavcodec-dev libavutil-dev \
     libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
     libssh2-1-dev libtelnet-dev libvncserver-dev \
