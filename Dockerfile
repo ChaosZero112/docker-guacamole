@@ -1,4 +1,4 @@
-FROM library/tomcat:10-jdk11-openjdk-slim
+FROM ubuntu:focal
 
 ENV ARCH=amd64 \
   GUAC_VER=1.3.0 \
