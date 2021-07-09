@@ -11,8 +11,7 @@ ENV ARCH=amd64 \
   POSTGRES_DB=guacamole_db
 
 # Install dependencies
-RUN curl -SL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG}/libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb -o libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb \
-  && apt-get update && apt-get install -y ./libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb \
+RUN  apt-get update && apt-get install -y \
     curl wget tar unzip lsb-release gnupg libcairo2-dev \
     autotools-dev dh-autoreconf libpng-dev \
     libossp-uuid-dev libavcodec-dev libavutil-dev \
@@ -27,9 +26,12 @@ RUN curl -SL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG}/lib
     && apt-get install -y postgresql-${PG_MAJOR} \
   && rm -rf /var/lib/apt/lists/*
   
-# Apply the s6-overlay
-RUN apt-get install -y curl
-RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-${ARCH}.tar.gz" \
+
+
+RUN curl -SL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG}/libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb -o libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb \
+  && apt-get install -y ./libjpeg-turbo-official32_${LIBJPEG}_${ARCH}.deb \
+  # Apply the s6-overlay
+  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-${ARCH}.tar.gz" \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
   && rm -rf s6-overlay-${ARCH}.tar.gz \
