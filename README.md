@@ -1,4 +1,4 @@
-**:Info: This is an exact clone of [oznu/docker-guacamole](https://github.com/oznu/docker-guacamole) for achival sake.**
+**ℹ️ This is an exact clone of [oznu/docker-guacamole](https://github.com/oznu/docker-guacamole) for achival sake.**
 
 # Docker Guacamole
 
