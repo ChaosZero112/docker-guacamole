@@ -1,4 +1,4 @@
-**:warning: This project is now archived and no longer supported. Please contact me if you maintain a replacement and would like me to link to your repo.**
+**:Info: This is an exact clone of [oznu/docker-guacamole](https://github.com/oznu/docker-guacamole) for achival sake.**
 
 # Docker Guacamole
 
