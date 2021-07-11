@@ -1,12 +1,10 @@
-**ℹ️ This is an exact clone of [oznu/docker-guacamole](https://github.com/oznu/docker-guacamole) for achival sake.**
+# Info
 
-# Docker Guacamole
+**The beginning of an extremely rough all-in-one Guacamole docker image. Not recommended for usage at this time.**
+
+## Docker Guacamole
 
 A Docker Container for [Apache Guacamole](https://guacamole.apache.org/), a client-less remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH over HTML5.
-
-This image will run on most platforms that support Docker including Docker for Mac, Docker for Windows, Synology DSM and Raspberry Pi 3 boards.
-
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/esgaHNRxdhY/0.jpg)](http://www.youtube.com/watch?v=esgaHNRxdhY "Video Title")
 
 This container runs the guacamole web client, the guacd server and a postgres database.
 
@@ -16,18 +14,7 @@ This container runs the guacamole web client, the guacd server and a postgres da
 docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
-  oznu/guacamole
-```
-
-## Raspberry Pi / ARMv6
-
-This image will also allow you to run [Apache Guacamole](https://guacamole.apache.org/) on a Raspberry Pi or other Docker-enabled ARMv5/6/7/8 devices by using the `armhf` tag.
-
-```shell
-docker run \
-  -p 8080:8080 \
-  -v </path/to/config>:/config \
-  oznu/guacamole:armhf
+  lusky3/guacamole
 ```
 
 ## Parameters
@@ -49,7 +36,7 @@ docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
   -e "EXTENSIONS=auth-ldap,auth-duo"
-  oznu/guacamole
+  lusky3/guacamole
 ```
 
 Currently the available extensions are:
@@ -76,7 +63,7 @@ Mapped volumes behave differently when running Docker for Windows and you may en
 version: "2"
 services:
   guacamole:
-    image: oznu/guacamole
+    image: lusky3/guacamole
     container_name: guacamole
     volumes:
       - postgres:/config
@@ -89,7 +76,7 @@ volumes:
 
 ## License
 
-Copyright (C) 2017-2020 oznu
+Copyright (C)2021 lusky3
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
