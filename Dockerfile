@@ -1,44 +1,63 @@
-FROM library/tomcat:9-jre11
+# https://fleet.linuxserver.io/image?name=lsiobase/alpine
+FROM lsiobase/alpine:3.14
 
 ENV ARCH=amd64 \
   GUAC_VER=1.3.0 \
   GUACAMOLE_HOME=/app/guacamole \
-  PG_MAJOR=9.6 \
+  PG_MAJOR=13 \
+  PG_JDBC=42.2.23 \
+  LIBJPEG=2.1.0 \
+  LIBTELNET=0.23 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
-  POSTGRES_DB=guacamole_db
-
-# Apply the s6-overlay
-
-RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v1.20.0.0/s6-overlay-${ARCH}.tar.gz" \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
-  && rm -rf s6-overlay-${ARCH}.tar.gz \
-  && mkdir -p ${GUACAMOLE_HOME} \
-    ${GUACAMOLE_HOME}/lib \
-    ${GUACAMOLE_HOME}/extensions
+  POSTGRES_DB=guacamole_db \
+  CATALINA_HOME=/var/lib/tomcat9
 
 WORKDIR ${GUACAMOLE_HOME}
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    libcairo2-dev libjpeg62-turbo-dev libpng-dev \
-    libossp-uuid-dev libavcodec-dev libavutil-dev \
-    libswscale-dev freerdp2-dev libfreerdp-client2-2 libpango1.0-dev \
-    libssh2-1-dev libtelnet-dev libvncserver-dev \
-    libpulse-dev libssl-dev libvorbis-dev libwebp-dev libwebsockets-dev \
-    ghostscript postgresql-${PG_MAJOR} \
-  && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk add --no-cache -lu \
+    alpine-sdk build-base automake autoconf nasm clang wget unzip gnupg postgresql \
+    cairo cmake libjpeg-turbo-dev libpng libtool ffmpeg-dev freerdp-dev pango-dev libssh2-dev libvncserver-dev \
+    libwebsockets-dev pulseaudio-dev libvorbis-dev libwebp-dev ghostscript terminus-font openjdk11 \
+    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin \
+    && curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
+    && tar xvf libtelnet-${LIBTELNET}.tar.gz \
+    && cd libtelnet-${LIBTELNET} \
+    && ./configure \
+    && make -j$(getconf _NPROCESSORS_ONLN) \
+    && make install \
+    && cd .. \
+    && rm -r libtelnet-${LIBTELNET} libtelnet-${LIBTELNET}.tar.gz \
+    && mkdir -p ${GUACAMOLE_HOME} \
+    ${GUACAMOLE_HOME}/lib \
+    ${GUACAMOLE_HOME}/extensions
 
 # Link FreeRDP to where guac expects it to be
-RUN [ "$ARCH" = "armhf" ] && ln -s /usr/local/lib/freerdp /usr/lib/arm-linux-gnueabihf/freerdp || exit 0
-RUN [ "$ARCH" = "amd64" ] && ln -s /usr/local/lib/freerdp /usr/lib/x86_64-linux-gnu/freerdp || exit 0
+RUN [ "$ARCH" = "amd64" ] && mkdir -p /usr/lib/x86_64-linux-gnu && ln -s /usr/lib/libfreerdp2.so /usr/lib/x86_64-linux-gnu/freerdp || exit 0
+
+# Install guacamole-server from source
+#RUN curl -SLO "https://github.com/apache/guacamole-server/archive/refs/heads/master.zip" \
+#  && unzip master.zip \
+#  && cd guacamole-server-master \
+#  && libtoolize --force \
+#  && autoheader \
+#  && aclocal \
+#  && automake --force-missing --add-missing \
+#  && autoupdate \
+#  && autoconf \
+#  && ./configure --enable-allow-freerdp-snapshots \
+#  && make -j$(getconf _NPROCESSORS_ONLN) \
+#  && make install \
+#  && cd .. \
+#  && rm -rf master.zip guacamole-server-master \
+#  && ldconfig
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
   && tar -xzf guacamole-server-${GUAC_VER}.tar.gz \
   && cd guacamole-server-${GUAC_VER} \
-  && ./configure --enable-allow-freerdp-snapshots \
+  && CFLAGS=-Wno-error=deprecated-declarations ./configure --enable-allow-freerdp-snapshots \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make install \
   && cd .. \
@@ -49,7 +68,7 @@ RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamo
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.1.4.jar "https://jdbc.postgresql.org/download/postgresql-42.1.4.jar" \
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-${PG_JDBC}.jar "https://jdbc.postgresql.org/download/postgresql-${PG_JDBC}.jar" \
   && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
   && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
   && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
@@ -59,13 +78,21 @@ RUN set -x \
 # Add optional extensions
 RUN set -xe \
   && mkdir ${GUACAMOLE_HOME}/extensions-available \
-  && for i in auth-ldap auth-duo auth-header auth-cas auth-openid auth-quickconnect auth-totp; do \
+  && for i in auth-ldap auth-duo auth-cas auth-openid auth-quickconnect auth-totp auth-saml; do \
     echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${i}-${GUAC_VER}.tar.gz" \
-    && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${i}-${GUAC_VER}.tar.gz" \
+    && curl -SLO --connect-timeout 5 --retry 5 --retry-delay 0 --retry-max-time 60 \
+    "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${i}-${GUAC_VER}.tar.gz" \
     && tar -xzf guacamole-${i}-${GUAC_VER}.tar.gz \
     && cp guacamole-${i}-${GUAC_VER}/guacamole-${i}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
     && rm -rf guacamole-${i}-${GUAC_VER} guacamole-${i}-${GUAC_VER}.tar.gz \
-  ;done
+    && sleep 8 \
+  ;done \
+  && echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-header-1.2.0.tar.gz" \
+    && curl -SLO --connect-timeout 5 --retry 5 --retry-delay 0 --retry-max-time 60 \
+    "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-header-1.2.0.tar.gz" \
+    && tar -xzf guacamole-auth-header-1.2.0.tar.gz \
+    && cp guacamole-auth-header-1.2.0/guacamole-auth-header-1.2.0.jar ${GUACAMOLE_HOME}/extensions-available/guacamole-auth-header-1.3.0.jar \
+    && rm -rf guacamole-auth-header-1.2.0 guacamole-auth-header-1.2.0.tar.gz
 
 ENV PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
