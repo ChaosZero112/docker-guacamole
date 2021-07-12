@@ -20,8 +20,8 @@ RUN apk update && apk add --no-cache -lu \
     alpine-sdk build-base automake autoconf nasm clang wget unzip gnupg postgresql \
     cairo cmake libjpeg-turbo-dev libpng libtool ffmpeg-dev freerdp-dev pango-dev libssh2-dev libvncserver-dev \
     libwebsockets-dev pulseaudio-dev libvorbis-dev libwebp-dev ghostscript terminus-font openjdk11 \
-    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin
-RUN curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
+    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin \
+    && curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
     && tar xvf libtelnet-${LIBTELNET}.tar.gz \
     && cd libtelnet-${LIBTELNET} \
     && ./configure \
@@ -61,8 +61,7 @@ RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamo
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make install \
   && cd .. \
-  && rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER} \
-  && ldconfig
+  && rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER}
 
 # Install guacamole-client and postgres auth adapter
 RUN set -x \
