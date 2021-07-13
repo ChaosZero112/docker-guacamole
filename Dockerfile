@@ -11,7 +11,8 @@ ENV ARCH=amd64 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db \
-  CATALINA_HOME=/var/lib/tomcat9
+  TOMCAT=tomcat9 \
+  CATALINA_HOME=/var/lib/${TOMCAT}
 
 ARG PACKAGES="        \
   alpine-sdk          \
@@ -47,7 +48,7 @@ WORKDIR ${GUACAMOLE_HOME}
 
 # Install dependencies
 RUN apk update && apk add --no-cache -lu ${PACKAGES} \
-    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin \
+    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev ${TOMCAT} \
     && curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
     && tar xvf libtelnet-${LIBTELNET}.tar.gz \
     && cd libtelnet-${LIBTELNET} \
@@ -58,7 +59,8 @@ RUN apk update && apk add --no-cache -lu ${PACKAGES} \
     && rm -r libtelnet-${LIBTELNET} libtelnet-${LIBTELNET}.tar.gz \
     && mkdir -p ${GUACAMOLE_HOME} \
     ${GUACAMOLE_HOME}/lib \
-    ${GUACAMOLE_HOME}/extensions
+    ${GUACAMOLE_HOME}/extensions \
+    && ln -s /usr/share/tomcat9/bin /var/lib/tomcat9/bin/
 
 # Link FreeRDP to where guac expects it to be
 RUN [ "$ARCH" = "amd64" ] && mkdir -p /usr/lib/x86_64-linux-gnu && ln -s /usr/lib/libfreerdp2.so /usr/lib/x86_64-linux-gnu/freerdp || exit 0
@@ -120,7 +122,7 @@ RUN set -xe \
     && cp guacamole-auth-header-1.2.0/guacamole-auth-header-1.2.0.jar ${GUACAMOLE_HOME}/extensions-available/guacamole-auth-header-1.3.0.jar \
     && rm -rf guacamole-auth-header-1.2.0 guacamole-auth-header-1.2.0.tar.gz
 
-ENV PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
+ENV PATH=/usr/share/${TOMCAT}/bin:/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
 
 WORKDIR /config
