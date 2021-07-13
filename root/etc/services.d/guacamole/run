@@ -26,4 +26,4 @@ else
 fi
 
 echo "Starting guacamole client..."
-s6-setuidgid root catalina.sh run
+s6-setuidgid guacd catalina.sh run

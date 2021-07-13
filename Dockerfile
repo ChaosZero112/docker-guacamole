@@ -1,6 +1,12 @@
 # https://fleet.linuxserver.io/image?name=lsiobase/alpine
 FROM lsiobase/alpine:3.14
 
+ARG PUID=1000
+ARG PGID=1000
+
+
+ARG TOMCAT="tomcat9"
+
 ENV ARCH=amd64 \
   GUAC_VER=1.3.0 \
   GUACAMOLE_HOME=/app/guacamole \
@@ -11,7 +17,7 @@ ENV ARCH=amd64 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db \
-  TOMCAT=tomcat9 \
+  TOMCAT=${TOMCAT} \
   CATALINA_HOME=/var/lib/${TOMCAT}
 
 ARG PACKAGES="        \
@@ -60,7 +66,8 @@ RUN apk update && apk add --no-cache -lu ${PACKAGES} \
     && mkdir -p ${GUACAMOLE_HOME} \
     ${GUACAMOLE_HOME}/lib \
     ${GUACAMOLE_HOME}/extensions \
-    && ln -s /usr/share/tomcat9/bin /var/lib/tomcat9/bin/
+    && ln -s /usr/share/tomcat9/bin /var/lib/tomcat9/bin \
+    && ln -s /usr/share/tomcat9/lib /var/lib/tomcat9/lib
 
 # Link FreeRDP to where guac expects it to be
 RUN [ "$ARCH" = "amd64" ] && mkdir -p /usr/lib/x86_64-linux-gnu && ln -s /usr/lib/libfreerdp2.so /usr/lib/x86_64-linux-gnu/freerdp || exit 0
@@ -121,6 +128,10 @@ RUN set -xe \
     && tar -xzf guacamole-auth-header-1.2.0.tar.gz \
     && cp guacamole-auth-header-1.2.0/guacamole-auth-header-1.2.0.jar ${GUACAMOLE_HOME}/extensions-available/guacamole-auth-header-1.3.0.jar \
     && rm -rf guacamole-auth-header-1.2.0 guacamole-auth-header-1.2.0.tar.gz
+
+# Create a new user guacd
+RUN groupadd --gid $PGID guacd
+RUN useradd --system --create-home --shell /usr/sbin/nologin --uid $PUID --gid $PGID guacd
 
 ENV PATH=/usr/share/${TOMCAT}/bin:/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
