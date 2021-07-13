@@ -47,8 +47,8 @@ WORKDIR ${GUACAMOLE_HOME}
 
 # Install dependencies
 RUN apk update && apk add --no-cache -lu ${PACKAGES} \
-    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin
-RUN curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
+    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin \
+    && curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
     && tar xvf libtelnet-${LIBTELNET}.tar.gz \
     && cd libtelnet-${LIBTELNET} \
     && ./configure \
