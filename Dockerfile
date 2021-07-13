@@ -13,13 +13,40 @@ ENV ARCH=amd64 \
   POSTGRES_DB=guacamole_db \
   CATALINA_HOME=/var/lib/tomcat9
 
+ARG PACKAGES="        \
+  alpine-sdk          \
+  build-base          \
+  automake            \
+  autoconf            \
+  nasm                \
+  clang               \
+  wget                \
+  unzip               \
+  gnupg               \
+  postgresql          \
+  cairo               \
+  cmake               \
+  libjpeg-turbo-dev   \
+  libpng              \
+  libtool             \
+  ffmpeg-dev          \
+  freerdp-dev         \
+  pango-dev           \
+  libssh2-dev         \
+  libvncserver-dev    \
+  libwebsockets-dev   \
+  pulseaudio-dev      \
+  libvorbis-dev       \
+  libwebp-dev         \
+  ghostscript         \
+  terminus-font       \
+  openjdk11           \
+  "
+
 WORKDIR ${GUACAMOLE_HOME}
 
 # Install dependencies
-RUN apk update && apk add --no-cache -lu \
-    alpine-sdk build-base automake autoconf nasm clang wget unzip gnupg postgresql \
-    cairo cmake libjpeg-turbo-dev libpng libtool ffmpeg-dev freerdp-dev pango-dev libssh2-dev libvncserver-dev \
-    libwebsockets-dev pulseaudio-dev libvorbis-dev libwebp-dev ghostscript terminus-font openjdk11 \
+RUN apk update && apk add --no-cache -lu ${PACKAGES} \
     && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev tomcat9 tomcat9-admin
 RUN curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
     && tar xvf libtelnet-${LIBTELNET}.tar.gz \
