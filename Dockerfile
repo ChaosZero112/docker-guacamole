@@ -1,9 +1,9 @@
 # https://fleet.linuxserver.io/image?name=lsiobase/alpine
 FROM lsiobase/alpine:3.14
 
-ARG PUID=1000
-ARG PGID=1000
-
+# Guacamole user and group
+ARG GUID=912
+ARG GGID=912
 
 ARG TOMCAT="tomcat9"
 
@@ -20,7 +20,7 @@ ENV ARCH=amd64 \
   TOMCAT=${TOMCAT} \
   CATALINA_HOME=/var/lib/${TOMCAT}
 
-ARG PACKAGES="        \
+ARG BUILD_PACKAGES="  \
   alpine-sdk          \
   build-base          \
   automake            \
@@ -30,8 +30,7 @@ ARG PACKAGES="        \
   wget                \
   unzip               \
   gnupg               \
-  postgresql          \
-  cairo               \
+  cairo-dev           \
   cmake               \
   libjpeg-turbo-dev   \
   libpng              \
@@ -45,15 +44,22 @@ ARG PACKAGES="        \
   pulseaudio-dev      \
   libvorbis-dev       \
   libwebp-dev         \
+  "
+ARG RUN_PACKAGES="    \
+  postgresql          \
   ghostscript         \
   terminus-font       \
+  ttf-liberation      \
+  ttf-dejavu          \
+  netcat-openbsd      \
   openjdk11           \
-  "
+"
 
 WORKDIR ${GUACAMOLE_HOME}
 
 # Install dependencies
-RUN apk update && apk add --no-cache -lu ${PACKAGES} \
+RUN apk update && apk add --no-cache -lu --virtual .build ${BUILD_PACKAGES} \
+    && apk add --no-cache -lu ${RUN_PACKAGES} \
     && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev ${TOMCAT} \
     && curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
     && tar xvf libtelnet-${LIBTELNET}.tar.gz \
@@ -66,28 +72,19 @@ RUN apk update && apk add --no-cache -lu ${PACKAGES} \
     && mkdir -p ${GUACAMOLE_HOME} \
     ${GUACAMOLE_HOME}/lib \
     ${GUACAMOLE_HOME}/extensions \
+    && addgroup -S -g $GGID guacd \
+    && adduser -S -D -H -s /usr/sbin/nologin -u $GUID -G guacd guacd \
+    && usermod -aG tomcat9 guacd \
     && ln -s /usr/share/tomcat9/bin /var/lib/tomcat9/bin \
-    && ln -s /usr/share/tomcat9/lib /var/lib/tomcat9/lib
+    && ln -s /usr/share/tomcat9/conf /var/lib/tomcat9/conf \
+    && ln -s /usr/share/tomcat9/lib /var/lib/tomcat9/lib \
+    && ln -s /usr/share/tomcat9/logs /var/lib/tomcat9/logs \
+    && ln -s /usr/share/tomcat9/temp /var/lib/tomcat9/temp \
+    && ln -s /usr/share/tomcat9/work /var/lib/tomcat9/work \
+    && chmod 777 /tmp
 
 # Link FreeRDP to where guac expects it to be
 RUN [ "$ARCH" = "amd64" ] && mkdir -p /usr/lib/x86_64-linux-gnu && ln -s /usr/lib/libfreerdp2.so /usr/lib/x86_64-linux-gnu/freerdp || exit 0
-
-# Install guacamole-server from source
-#RUN curl -SLO "https://github.com/apache/guacamole-server/archive/refs/heads/master.zip" \
-#  && unzip master.zip \
-#  && cd guacamole-server-master \
-#  && libtoolize --force \
-#  && autoheader \
-#  && aclocal \
-#  && automake --force-missing --add-missing \
-#  && autoupdate \
-#  && autoconf \
-#  && ./configure --enable-allow-freerdp-snapshots \
-#  && make -j$(getconf _NPROCESSORS_ONLN) \
-#  && make install \
-#  && cd .. \
-#  && rm -rf master.zip guacamole-server-master \
-#  && ldconfig
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
@@ -108,7 +105,9 @@ RUN set -x \
   && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
   && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
   && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
-  && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz
+  && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
+  && chown -R ${TOMCAT}:${TOMCAT} ${CATALINA_HOME}/* \
+  && chmod -R 775 ${CATALINA_HOME}/*
 
 # Add optional extensions
 RUN set -xe \
@@ -129,12 +128,8 @@ RUN set -xe \
     && cp guacamole-auth-header-1.2.0/guacamole-auth-header-1.2.0.jar ${GUACAMOLE_HOME}/extensions-available/guacamole-auth-header-1.3.0.jar \
     && rm -rf guacamole-auth-header-1.2.0 guacamole-auth-header-1.2.0.tar.gz
 
-# Create a new user guacd
-RUN groupadd --gid $PGID guacd
-RUN useradd --system --create-home --shell /usr/sbin/nologin --uid $PUID --gid $PGID guacd
-
-ENV PATH=/usr/share/${TOMCAT}/bin:/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
-ENV GUACAMOLE_HOME=/config/guacamole
+ENV PATH=/usr/share/${TOMCAT}/bin:/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH \
+    GUACAMOLE_HOME=/config/guacamole
 
 WORKDIR /config
 
