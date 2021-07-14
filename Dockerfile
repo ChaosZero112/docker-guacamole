@@ -30,7 +30,6 @@ ARG BUILD_PACKAGES="  \
   wget                \
   unzip               \
   gnupg               \
-  cairo-dev           \
   cmake               \
   libjpeg-turbo-dev   \
   libpng              \
@@ -46,6 +45,7 @@ ARG BUILD_PACKAGES="  \
   libwebp-dev         \
   "
 ARG RUN_PACKAGES="    \
+  cairo-dev           \
   postgresql          \
   ghostscript         \
   terminus-font       \
@@ -81,36 +81,28 @@ RUN apk update && apk add --no-cache -lu --virtual .build ${BUILD_PACKAGES} \
     && ln -s /usr/share/tomcat9/logs /var/lib/tomcat9/logs \
     && ln -s /usr/share/tomcat9/temp /var/lib/tomcat9/temp \
     && ln -s /usr/share/tomcat9/work /var/lib/tomcat9/work \
-    && chmod 777 /tmp
-
-# Link FreeRDP to where guac expects it to be
-RUN [ "$ARCH" = "amd64" ] && mkdir -p /usr/lib/x86_64-linux-gnu && ln -s /usr/lib/libfreerdp2.so /usr/lib/x86_64-linux-gnu/freerdp || exit 0
-
-# Install guacamole-server
-RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
+    && chmod 777 /tmp \
+    && [ "$ARCH" = "amd64" ] && mkdir -p /usr/lib/x86_64-linux-gnu && ln -s /usr/lib/libfreerdp2.so /usr/lib/x86_64-linux-gnu/freerdp || exit 0 \
+  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
   && tar -xzf guacamole-server-${GUAC_VER}.tar.gz \
   && cd guacamole-server-${GUAC_VER} \
   && CFLAGS=-Wno-error=deprecated-declarations ./configure --enable-allow-freerdp-snapshots \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make install \
   && cd .. \
-  && rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER}
-
-# Install guacamole-client and postgres auth adapter
-RUN set -x \
-  && rm -rf ${CATALINA_HOME}/webapps/ROOT \
-  && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-${PG_JDBC}.jar "https://jdbc.postgresql.org/download/postgresql-${PG_JDBC}.jar" \
-  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
-  && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
-  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
-  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
-  && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
-  && chown -R ${TOMCAT}:${TOMCAT} ${CATALINA_HOME}/* \
-  && chmod -R 775 ${CATALINA_HOME}/*
-
-# Add optional extensions
-RUN set -xe \
+  && rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER} \
+&& set -x \
+&& rm -rf ${CATALINA_HOME}/webapps/ROOT \
+&& curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
+&& curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-${PG_JDBC}.jar "https://jdbc.postgresql.org/download/postgresql-${PG_JDBC}.jar" \
+&& curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
+&& tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
+&& cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
+&& cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
+&& rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
+&& chown -R ${TOMCAT}:${TOMCAT} ${CATALINA_HOME}/* \
+&& chmod -R 775 ${CATALINA_HOME}/* \
+  && set -xe \
   && mkdir ${GUACAMOLE_HOME}/extensions-available \
   && for i in auth-ldap auth-duo auth-cas auth-openid auth-quickconnect auth-totp auth-saml; do \
     echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${i}-${GUAC_VER}.tar.gz" \
@@ -126,7 +118,9 @@ RUN set -xe \
     "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-header-1.2.0.tar.gz" \
     && tar -xzf guacamole-auth-header-1.2.0.tar.gz \
     && cp guacamole-auth-header-1.2.0/guacamole-auth-header-1.2.0.jar ${GUACAMOLE_HOME}/extensions-available/guacamole-auth-header-1.3.0.jar \
-    && rm -rf guacamole-auth-header-1.2.0 guacamole-auth-header-1.2.0.tar.gz
+    && rm -rf guacamole-auth-header-1.2.0 guacamole-auth-header-1.2.0.tar.gz \
+  && apk del .build \
+  && rm -rf /var/cache/apk/*
 
 ENV PATH=/usr/share/${TOMCAT}/bin:/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH \
     GUACAMOLE_HOME=/config/guacamole
