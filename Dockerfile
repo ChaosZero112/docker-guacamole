@@ -60,7 +60,7 @@ WORKDIR ${GUACAMOLE_HOME}
 # Install dependencies
 RUN apk update && apk add --no-cache -lu --virtual .build ${BUILD_PACKAGES} \
     && apk add --no-cache -lu ${RUN_PACKAGES} \
-    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev ${TOMCAT} \
+    && apk add --no-cache -luX http://dl-cdn.alpinelinux.org/alpine/edge/testing ossp-uuid-dev ${TOMCAT} tomcat-native \
     && curl -sSLO https://github.com/seanmiddleditch/libtelnet/releases/download/${LIBTELNET}/libtelnet-${LIBTELNET}.tar.gz \
     && tar xvf libtelnet-${LIBTELNET}.tar.gz \
     && cd libtelnet-${LIBTELNET} \
